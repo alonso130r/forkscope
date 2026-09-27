@@ -2,12 +2,15 @@ from typing import Any, Protocol
 
 
 class Planner(Protocol):
+    def reset(self, *, seed: int) -> None:
+        """Reset planner state and initialize its randomness for one episode."""
+        ...
+
     def plan(
         self,
         observation: Any,
         *,
         horizon: int,
-        rng_seed: int | None = None,
     ) -> Any:
         """Return the action to execute now."""
         ...

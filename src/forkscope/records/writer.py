@@ -5,7 +5,7 @@ from typing import Any
 
 import numpy as np
 
-from forkscope.results.records import EpisodeRecord
+from forkscope.records.records import EpisodeRecord
 
 
 def _json_value(value: Any) -> Any:

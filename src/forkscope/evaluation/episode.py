@@ -2,7 +2,7 @@ from typing import Any
 
 from forkscope.interface.interfaces import InterfaceEnvironment
 from forkscope.planning.planner import Planner
-from forkscope.results.records import EpisodeRecord, StepRecord
+from forkscope.records.records import EpisodeRecord, StepRecord
 
 
 def run_episode(
@@ -13,6 +13,12 @@ def run_episode(
     horizon: int,
     max_steps: int,
 ) -> EpisodeRecord:
+    if max_steps <= 0:
+        raise ValueError("max_steps must be greater than zero.")
+    if horizon <= 0:
+        raise ValueError("horizon must be greater than zero.")
+
+    planner.reset(seed=seed)
     observation, _ = env.reset(seed=seed)
     steps: list[StepRecord] = []
     total_reward = 0.0
@@ -22,7 +28,6 @@ def run_episode(
         action = planner.plan(
             observation,
             horizon=horizon,
-            rng_seed=seed + step_index,
         )
         next_observation, reward, terminated, truncated, info = env.step(action)
         steps.append(
@@ -42,6 +47,7 @@ def run_episode(
         if terminated or truncated:
             break
 
+    step_limit_reached = not terminated and not truncated and len(steps) == max_steps
     return EpisodeRecord(
         seed=seed,
         horizon=horizon,
@@ -49,4 +55,5 @@ def run_episode(
         steps=steps,
         terminated=terminated,
         truncated=truncated,
+        step_limit_reached=step_limit_reached,
     )

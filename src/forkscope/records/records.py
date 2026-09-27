@@ -21,6 +21,7 @@ class EpisodeRecord:
     steps: list[StepRecord]
     terminated: bool
     truncated: bool
+    step_limit_reached: bool
 
     @property
     def step_count(self) -> int:
