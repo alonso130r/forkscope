@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# Tool caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Local environment and editor files
+.env
+.idea/
+.vscode/
+.DS_Store
+
+# Forkscope outputs and local model artifacts
+outputs/
+*.ckpt
+*.pt
+*.pth
+*.safetensors
+

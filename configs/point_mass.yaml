@@ -1,0 +1,19 @@
+# Placeholder configuration shape for the first example integration.
+environment:
+  adapter: examples.point_mass.env:PointMassEnv
+  scenarios: examples/point_mass/scenarios.yaml
+
+model:
+  backend: torch
+  adapter: examples.point_mass.model:PointMassDynamics
+  checkpoint: models/point_mass.pt
+
+objective:
+  adapter: examples.point_mass.objective:distance_to_goal
+
+evaluation:
+  seeds: [1, 2, 3, 4, 5]
+  horizons: [1, 2, 4, 8, 16]
+  execution_chunk: 1
+  output_dir: outputs/point_mass
+
