@@ -1,5 +1,3 @@
-from typing import Any
-
 from forkscope.interface.interfaces import InterfaceEnvironment
 from forkscope.planning.planner import Planner
 from forkscope.records.records import EpisodeRecord, StepRecord

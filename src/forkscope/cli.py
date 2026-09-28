@@ -10,6 +10,7 @@ import typer
 from forkscope import RolloutBenchmarker
 
 app = typer.Typer(help="Evaluate test-time planning rollouts on your scenarios.")
+OUTPUT_OPTION = typer.Option(Path("results.jsonl"), help="JSONL output path.")
 
 
 @app.callback()
@@ -50,7 +51,7 @@ def run(
     seeds: str = typer.Option("1,2,3,4,5", help="Comma-separated episode seeds."),
     horizons: str = typer.Option("1,2,4,8,16", help="Comma-separated planning horizons."),
     max_steps: int = typer.Option(500, min=1, help="Maximum environment steps per episode."),
-    output: Path = typer.Option(Path("results.jsonl"), help="JSONL output path."),
+    output: Path = OUTPUT_OPTION,
 ) -> None:
     """Run a matched-seed horizon sweep and write its episode records."""
     benchmarker = RolloutBenchmarker(

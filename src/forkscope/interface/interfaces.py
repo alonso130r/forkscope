@@ -1,6 +1,6 @@
-from typing import Protocol, Any
-import numpy as np
+from typing import Any, Protocol
 
+import numpy as np
 
 Array = np.ndarray
 
