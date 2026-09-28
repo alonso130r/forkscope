@@ -25,3 +25,40 @@ PYTHONPATH=. forkscope run \
 The same factories can be passed to `RolloutBenchmarker` from Python. See the example README for
 that usage and details about the JSON Lines output. The YAML file documents the matching settings;
 the CLI currently accepts options directly and does not load YAML configs.
+
+## Array backends
+
+The Python API uses NumPy arrays by default. To use JAX or PyTorch, install the corresponding extra
+and select the backend when creating a benchmark:
+
+```sh
+python -m pip install -e '.[jax]'
+python -m pip install -e '.[torch]'
+```
+
+```python
+from forkscope import RolloutBenchmarker
+
+benchmarker = RolloutBenchmarker(
+    env_factory,
+    planner_factory,
+    seeds=[0, 1],
+    horizons=[1, 2],
+    max_steps=10,
+    backend="jax",  # or "torch"; omit for NumPy
+)
+records = benchmarker.run()
+benchmarker.write_results("results.jsonl")
+```
+
+The environment and planner must produce arrays from the selected framework. For example, a JAX
+environment can return `{"position": jax.numpy.asarray([position])}` from `reset` and `step`,
+and its planner can return a `jax.numpy.asarray(action)` action. The equivalent PyTorch values are
+`{"position": torch.tensor([position])}` and `torch.tensor(action)`. Python scalar actions remain
+supported for environments that use them. ForkScope rejects arrays from a different backend at
+the environment and planner boundaries; it does not convert them during a run.
+
+`run_episode`, `run_sweep`, and the tree utilities also accept `backend="jax"` or
+`backend="torch"`. Tree operations retain the framework's array type and device. JSON Lines output
+converts arrays to host values when writing; PyTorch tensors are detached first. The CLI currently
+uses the default NumPy backend.
