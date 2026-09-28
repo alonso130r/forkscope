@@ -6,33 +6,22 @@ works for setups that use test-time, action-conditioned planning rollouts (plann
 of actions, world model scores those actions based on outcome, planner evaluates and selects the best
 one to execute).
 
-## Programmatic use
+## Runnable example
 
-Create zero-argument factories for a Gymnasium-compatible environment and a planner implementing
-`reset(seed=...)` and `plan(observation, horizon=...)`, then pass them to the public benchmarker:
-
-```python
-from forkscope import RolloutBenchmarker
-
-benchmarker = RolloutBenchmarker(
-    make_environment,
-    make_planner,
-    seeds=[1, 2, 3],
-    horizons=[1, 4, 8],
-    max_steps=500,
-)
-records = benchmarker.run()
-benchmarker.write_results("outputs/results.jsonl")
-```
-
-The CLI uses the same benchmarker. Factories must be importable as `package.module:callable`:
+The [point-mass example](examples/point_mass/README.md) includes a small environment, a planner,
+zero-argument factories for the CLI, a reference YAML config, and a programmatic example. Install
+ForkScope in editable mode from the repository root with `python -m pip install -e .`, then run:
 
 ```sh
-forkscope run \
-  --env-factory my_project.environment:make_environment \
-  --planner-factory my_project.planner:make_planner \
-  --seeds 1,2,3 \
-  --horizons 1,4,8 \
-  --max-steps 500 \
-  --output outputs/results.jsonl
+PYTHONPATH=. forkscope run \
+  --env-factory examples.point_mass.example:make_environment \
+  --planner-factory examples.point_mass.example:make_planner \
+  --seeds 0,1,2 \
+  --horizons 1,2,4 \
+  --max-steps 10 \
+  --output outputs/point_mass/results.jsonl
 ```
+
+The same factories can be passed to `RolloutBenchmarker` from Python. See the example README for
+that usage and details about the JSON Lines output. The YAML file documents the matching settings;
+the CLI currently accepts options directly and does not load YAML configs.

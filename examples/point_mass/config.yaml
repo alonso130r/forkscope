@@ -1,0 +1,14 @@
+# Reference settings for the CLI and Python API examples.
+# ForkScope's CLI currently takes these as command-line options; it does not
+# load YAML files directly.
+environment:
+  factory: examples.point_mass.example:make_environment
+
+planner:
+  factory: examples.point_mass.example:make_planner
+
+evaluation:
+  seeds: [0, 1, 2]
+  horizons: [1, 2, 4]
+  max_steps: 10
+  output_path: outputs/point_mass/results.jsonl
