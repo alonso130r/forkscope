@@ -20,14 +20,18 @@ from forkscope.interface.tree import (
 )
 
 
-@pytest.mark.parametrize("backend", ["jax", "torch"])
-def test_optional_backend_tree_and_benchmark(backend: BackendName, tmp_path: Path) -> None:
-    array_module = pytest.importorskip("jax.numpy" if backend == "jax" else "torch")
+@pytest.mark.parametrize("backend", ["numpy", "jax", "torch"])
+def test_backend_tree_and_benchmark(backend: BackendName, tmp_path: Path) -> None:
+    array_module: Any
+    if backend == "numpy":
+        array_module = np
+    else:
+        array_module = pytest.importorskip("jax.numpy" if backend == "jax" else "torch")
 
     def make_array(values: list[float]) -> Any:
-        if backend == "jax":
-            return array_module.asarray(values)
-        return array_module.tensor(values, requires_grad=True)
+        if backend == "torch":
+            return array_module.tensor(values, requires_grad=True)
+        return array_module.asarray(values)
 
     source = {"value": make_array([1.0])}
     copied = tree_copy(source, backend=backend)
@@ -67,12 +71,18 @@ def test_optional_backend_tree_and_benchmark(backend: BackendName, tmp_path: Pat
     assert row["steps"][0]["action"] == [2.0]
     assert row["steps"][0]["info"]["array"] == [2.0]
 
+    class ForeignArray:
+        shape = (1,)
+        dtype = np.dtype("float64")
+        ndim = 1
+
+    foreign_array = ForeignArray() if backend == "numpy" else np.array([1.0])
     with pytest.raises(TreeStructureError, match="expected .* array"):
-        tree_copy({"value": np.array([1.0])}, backend=backend)
+        tree_copy({"value": foreign_array}, backend=backend)
 
     class WrongPlanner(Planner):
         def plan(self, observation: Any, *, horizon: int) -> Any:
-            return np.array([1.0])
+            return foreign_array
 
     with pytest.raises(TypeError, match="planner action at \\$"):
         run_episode(Environment(), WrongPlanner(), seed=0, horizon=1, max_steps=1, backend=backend)
