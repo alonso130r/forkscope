@@ -1,4 +1,4 @@
-from forkscope.interface.backend import BackendName, resolve_backend
+from forkscope.interface.backend import BackendName, resolve_backend, validate_array_backend
 from forkscope.interface.interfaces import InterfaceEnvironment
 from forkscope.planning.planner import Planner
 from forkscope.records.records import EpisodeRecord, StepRecord
@@ -13,7 +13,7 @@ def run_episode(
     max_steps: int,
     backend: BackendName = "numpy",
 ) -> EpisodeRecord:
-    resolve_backend(backend)
+    adapter = resolve_backend(backend)
     if max_steps <= 0:
         raise ValueError("max_steps must be greater than zero.")
     if horizon <= 0:
@@ -21,6 +21,7 @@ def run_episode(
 
     planner.reset(seed=seed)
     observation, _ = env.reset(seed=seed)
+    validate_array_backend(observation, adapter, name="reset observation")
     steps: list[StepRecord] = []
     total_reward = 0.0
     terminated = truncated = False
@@ -30,7 +31,9 @@ def run_episode(
             observation,
             horizon=horizon,
         )
+        validate_array_backend(action, adapter, name="planner action")
         next_observation, reward, terminated, truncated, info = env.step(action)
+        validate_array_backend(next_observation, adapter, name="step observation")
         steps.append(
             StepRecord(
                 index=step_index,

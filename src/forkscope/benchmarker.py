@@ -60,4 +60,4 @@ class RolloutBenchmarker:
 
     def write_results(self, path: str | Path) -> None:
         """Write the current episode results as JSON Lines."""
-        write_jsonl(self.results, path)
+        write_jsonl(self.results, path, backend=self.backend)

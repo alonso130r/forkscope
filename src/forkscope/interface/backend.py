@@ -127,3 +127,29 @@ def resolve_backend(name: BackendName) -> ArrayBackend:
     if name == "torch":
         return TorchBackend()
     raise ValueError(f"Unknown backend {name!r}; choose 'numpy', 'jax', or 'torch'.")
+
+
+def is_array_like(value: Any) -> bool:
+    """Recognize array leaves without importing optional frameworks."""
+    return not isinstance(value, np.generic) and all(
+        hasattr(value, attribute) for attribute in ("shape", "dtype", "ndim")
+    )
+
+
+def validate_array_backend(
+    value: Any, adapter: ArrayBackend, *, name: str, path: str = "$"
+) -> None:
+    """Reject arrays from another backend within a nested boundary value."""
+    if adapter.is_array(value):
+        return
+    if is_array_like(value):
+        raise TypeError(
+            f"{name} at {path} contains {type(value).__name__}; "
+            f"expected {adapter.name} array."
+        )
+    if isinstance(value, dict):
+        for key, item in value.items():
+            validate_array_backend(item, adapter, name=name, path=f"{path}[{key!r}]")
+    elif isinstance(value, (tuple, list)):
+        for index, item in enumerate(value):
+            validate_array_backend(item, adapter, name=name, path=f"{path}[{index}]")
