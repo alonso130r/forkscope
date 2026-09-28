@@ -1,6 +1,7 @@
 from collections.abc import Callable, Sequence
 
 from forkscope.evaluation.episode import run_episode
+from forkscope.interface.backend import BackendName, resolve_backend
 from forkscope.interface.interfaces import InterfaceEnvironment
 from forkscope.planning.planner import Planner
 from forkscope.records.records import EpisodeRecord
@@ -13,7 +14,9 @@ def run_sweep(
     seeds: Sequence[int],
     horizons: Sequence[int],
     max_steps: int,
+    backend: BackendName = "numpy",
 ) -> list[EpisodeRecord]:
+    resolve_backend(backend)
     records = []
 
     for horizon in horizons:
@@ -27,6 +30,7 @@ def run_sweep(
                         seed=seed,
                         horizon=horizon,
                         max_steps=max_steps,
+                        backend=backend,
                     )
                 )
             finally:

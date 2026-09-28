@@ -1,3 +1,4 @@
+from forkscope.interface.backend import BackendName, resolve_backend
 from forkscope.interface.interfaces import InterfaceEnvironment
 from forkscope.planning.planner import Planner
 from forkscope.records.records import EpisodeRecord, StepRecord
@@ -10,7 +11,9 @@ def run_episode(
     seed: int,
     horizon: int,
     max_steps: int,
+    backend: BackendName = "numpy",
 ) -> EpisodeRecord:
+    resolve_backend(backend)
     if max_steps <= 0:
         raise ValueError("max_steps must be greater than zero.")
     if horizon <= 0:

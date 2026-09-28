@@ -4,6 +4,7 @@ from collections.abc import Callable, Sequence
 from pathlib import Path
 
 from forkscope.evaluation.sweep import run_sweep
+from forkscope.interface.backend import BackendName, resolve_backend
 from forkscope.interface.interfaces import InterfaceEnvironment
 from forkscope.planning.planner import Planner
 from forkscope.records.records import EpisodeRecord
@@ -21,6 +22,7 @@ class RolloutBenchmarker:
         seeds: Sequence[int],
         horizons: Sequence[int],
         max_steps: int,
+        backend: BackendName = "numpy",
     ) -> None:
         seed_values = tuple(seeds)
         horizon_values = tuple(horizons)
@@ -33,11 +35,14 @@ class RolloutBenchmarker:
         if max_steps <= 0:
             raise ValueError("max_steps must be greater than zero.")
 
+        resolve_backend(backend)
+
         self.env_factory = env_factory
         self.planner_factory = planner_factory
         self.seeds = seed_values
         self.horizons = horizon_values
         self.max_steps = max_steps
+        self.backend = backend
         self.results: list[EpisodeRecord] = []
 
     def run(self) -> list[EpisodeRecord]:
@@ -49,6 +54,7 @@ class RolloutBenchmarker:
             seeds=self.seeds,
             horizons=self.horizons,
             max_steps=self.max_steps,
+            backend=self.backend,
         )
         return self.results
 
