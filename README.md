@@ -22,6 +22,15 @@ PYTHONPATH=. forkscope run \
   --output outputs/point_mass/results.jsonl
 ```
 
+`--rollout-counts` and `--temperatures` are optional sweep dimensions. ForkScope evaluates every
+combination of horizon, supplied rollout count, supplied temperature, and seed. For a planner that
+supports both settings, add `--rollout-counts 64,128,256` and
+`--temperatures 0.1,0.5,1.0`. Omit either option
+to leave that planner setting unset. When a range is supplied, the planner must accept the matching
+`rollout_count` or `temperature` keyword in `plan`; planners that do not use these settings can
+continue to run without those options. The point-mass example does not use sampling, so run it
+without the two optional options above.
+
 The same factories can be passed to `RolloutBenchmarker` from Python. See the example README for
 that usage and details about the JSON Lines output. The YAML file documents the matching settings;
 the CLI currently accepts options directly and does not load YAML configs.
@@ -62,3 +71,6 @@ the environment and planner boundaries; it does not convert them during a run.
 `backend="torch"`. Tree operations retain the framework's array type and device. JSON Lines output
 converts arrays to host values when writing; PyTorch tensors are detached first. The CLI currently
 uses the default NumPy backend.
+
+Each JSON Lines episode record includes `rollout_count` and `temperature` so it can be associated
+with the configuration used. These fields are `null` when the corresponding sweep range is omitted.

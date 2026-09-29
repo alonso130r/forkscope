@@ -11,6 +11,8 @@ class Planner(Protocol):
         observation: Any,
         *,
         horizon: int,
+        rollout_count: int | None = None,
+        temperature: float | None = None,
     ) -> Any:
-        """Return the action to execute now."""
+        """Return the action to execute now using supported optional settings."""
         ...

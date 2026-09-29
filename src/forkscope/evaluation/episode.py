@@ -12,6 +12,8 @@ def run_episode(
     horizon: int,
     max_steps: int,
     backend: BackendName = "numpy",
+    rollout_count: int | None = None,
+    temperature: float | None = None,
 ) -> EpisodeRecord:
     adapter = resolve_backend(backend)
     if max_steps <= 0:
@@ -27,10 +29,12 @@ def run_episode(
     terminated = truncated = False
 
     for step_index in range(max_steps):
-        action = planner.plan(
-            observation,
-            horizon=horizon,
-        )
+        planner_options: dict[str, int | float] = {}
+        if rollout_count is not None:
+            planner_options["rollout_count"] = rollout_count
+        if temperature is not None:
+            planner_options["temperature"] = temperature
+        action = planner.plan(observation, horizon=horizon, **planner_options)
         validate_array_backend(action, adapter, name="planner action")
         next_observation, reward, terminated, truncated, info = env.step(action)
         validate_array_backend(next_observation, adapter, name="step observation")
@@ -60,4 +64,6 @@ def run_episode(
         terminated=terminated,
         truncated=truncated,
         step_limit_reached=step_limit_reached,
+        rollout_count=rollout_count,
+        temperature=temperature,
     )

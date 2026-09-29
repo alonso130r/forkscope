@@ -22,6 +22,8 @@ class EpisodeRecord:
     terminated: bool
     truncated: bool
     step_limit_reached: bool
+    rollout_count: int | None = None
+    temperature: float | None = None
 
     @property
     def step_count(self) -> int:

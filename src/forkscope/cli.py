@@ -1,6 +1,7 @@
 """Command-line entry point for Forkscope."""
 
 import importlib
+import math
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -44,6 +45,16 @@ def _parse_ints(value: str, option: str, *, minimum: int) -> list[int]:
     return values
 
 
+def _parse_positive_floats(value: str, option: str) -> list[float]:
+    try:
+        values = [float(item.strip()) for item in value.split(",")]
+    except ValueError as exc:
+        raise typer.BadParameter(f"{option} must be comma-separated numbers.") from exc
+    if not values or any(not math.isfinite(item) or item <= 0 for item in values):
+        raise typer.BadParameter(f"{option} values must be finite and greater than zero.")
+    return values
+
+
 @app.command()
 def run(
     env_factory: str = typer.Option(..., help="Environment factory as package.module:callable."),
@@ -51,6 +62,12 @@ def run(
     seeds: str = typer.Option("1,2,3,4,5", help="Comma-separated episode seeds."),
     horizons: str = typer.Option("1,2,4,8,16", help="Comma-separated planning horizons."),
     max_steps: int = typer.Option(500, min=1, help="Maximum environment steps per episode."),
+    rollout_counts: str | None = typer.Option(
+        None, help="Optional comma-separated planner rollout counts to sweep."
+    ),
+    temperatures: str | None = typer.Option(
+        None, help="Optional comma-separated planner sampling temperatures to sweep."
+    ),
     output: Path = OUTPUT_OPTION,
 ) -> None:
     """Run a matched-seed horizon sweep and write its episode records."""
@@ -60,6 +77,16 @@ def run(
         seeds=_parse_ints(seeds, "--seeds", minimum=0),
         horizons=_parse_ints(horizons, "--horizons", minimum=1),
         max_steps=max_steps,
+        rollout_counts=(
+            _parse_ints(rollout_counts, "--rollout-counts", minimum=1)
+            if rollout_counts is not None
+            else None
+        ),
+        temperatures=(
+            _parse_positive_floats(temperatures, "--temperatures")
+            if temperatures is not None
+            else None
+        ),
     )
     benchmarker.run()
     benchmarker.write_results(output)

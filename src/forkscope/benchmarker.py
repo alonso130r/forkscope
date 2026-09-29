@@ -3,7 +3,7 @@
 from collections.abc import Callable, Sequence
 from pathlib import Path
 
-from forkscope.evaluation.sweep import run_sweep
+from forkscope.evaluation.sweep import _validate_optional_ranges, run_sweep
 from forkscope.interface.backend import BackendName, resolve_backend
 from forkscope.interface.interfaces import InterfaceEnvironment
 from forkscope.planning.planner import Planner
@@ -23,6 +23,8 @@ class RolloutBenchmarker:
         horizons: Sequence[int],
         max_steps: int,
         backend: BackendName = "numpy",
+        rollout_counts: Sequence[int] | None = None,
+        temperatures: Sequence[float] | None = None,
     ) -> None:
         seed_values = tuple(seeds)
         horizon_values = tuple(horizons)
@@ -36,6 +38,9 @@ class RolloutBenchmarker:
             raise ValueError("max_steps must be greater than zero.")
 
         resolve_backend(backend)
+        rollout_values = tuple(rollout_counts) if rollout_counts is not None else None
+        temperature_values = tuple(temperatures) if temperatures is not None else None
+        _validate_optional_ranges(rollout_values, temperature_values)
 
         self.env_factory = env_factory
         self.planner_factory = planner_factory
@@ -43,6 +48,8 @@ class RolloutBenchmarker:
         self.horizons = horizon_values
         self.max_steps = max_steps
         self.backend = backend
+        self.rollout_counts = rollout_values
+        self.temperatures = temperature_values
         self.results: list[EpisodeRecord] = []
 
     def run(self) -> list[EpisodeRecord]:
@@ -55,6 +62,8 @@ class RolloutBenchmarker:
             horizons=self.horizons,
             max_steps=self.max_steps,
             backend=self.backend,
+            rollout_counts=self.rollout_counts,
+            temperatures=self.temperatures,
         )
         return self.results
 

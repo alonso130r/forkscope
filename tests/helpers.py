@@ -48,9 +48,30 @@ class CountingPlanner:
         return horizon
 
 
+class ConfigurableCountingPlanner(CountingPlanner):
+    def __init__(self) -> None:
+        super().__init__()
+        self.configurations: list[tuple[int | None, float | None]] = []
+
+    def plan(
+        self,
+        observation: Any,
+        *,
+        horizon: int,
+        rollout_count: int | None = None,
+        temperature: float | None = None,
+    ) -> int:
+        self.configurations.append((rollout_count, temperature))
+        return super().plan(observation, horizon=horizon)
+
+
 def make_environment() -> CountingEnvironment:
     return CountingEnvironment()
 
 
 def make_planner() -> CountingPlanner:
     return CountingPlanner()
+
+
+def make_configurable_planner() -> ConfigurableCountingPlanner:
+    return ConfigurableCountingPlanner()

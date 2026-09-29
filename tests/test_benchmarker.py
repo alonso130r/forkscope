@@ -78,6 +78,70 @@ def test_sweep_uses_matched_seeds_and_fresh_components() -> None:
     assert all(env.closed for env in CountingEnvironment.instances)
 
 
+def test_sweep_uses_cartesian_optional_planner_settings() -> None:
+    class ConfigurablePlanner(CountingPlanner):
+        def plan(self, observation, *, horizon, rollout_count=None, temperature=None):
+            self.configurations = getattr(self, "configurations", [])
+            self.configurations.append((horizon, rollout_count, temperature))
+            return super().plan(observation, horizon=horizon)
+
+    records = run_sweep(
+        make_environment,
+        ConfigurablePlanner,
+        seeds=[2],
+        horizons=[1, 3],
+        rollout_counts=[8, 16],
+        temperatures=[0.25, 0.5],
+        max_steps=1,
+    )
+
+    assert len(records) == 8
+    assert {
+        (record.horizon, record.rollout_count, record.temperature) for record in records
+    } == {
+        (horizon, rollout_count, temperature)
+        for horizon in [1, 3]
+        for rollout_count in [8, 16]
+        for temperature in [0.25, 0.5]
+    }
+
+
+def test_unconfigured_planner_keeps_existing_plan_signature() -> None:
+    records = run_sweep(
+        make_environment,
+        make_planner,
+        seeds=[1],
+        horizons=[2],
+        max_steps=1,
+    )
+
+    assert records[0].rollout_count is None
+    assert records[0].temperature is None
+
+
+@pytest.mark.parametrize(
+    ("kwargs", "message"),
+    [
+        ({"rollout_counts": []}, "rollout_counts"),
+        ({"rollout_counts": [0]}, "rollout_counts"),
+        ({"rollout_counts": [1.5]}, "rollout_counts"),
+        ({"temperatures": []}, "temperatures"),
+        ({"temperatures": [0]}, "temperatures"),
+        ({"temperatures": [float("nan")]}, "temperatures"),
+    ],
+)
+def test_benchmarker_rejects_invalid_optional_ranges(kwargs, message) -> None:
+    with pytest.raises(ValueError, match=message):
+        RolloutBenchmarker(
+            make_environment,
+            make_planner,
+            seeds=[1],
+            horizons=[1],
+            max_steps=1,
+            **kwargs,
+        )
+
+
 def test_benchmarker_stores_and_returns_results_and_writes_jsonl(tmp_path) -> None:
     benchmarker = RolloutBenchmarker(
         make_environment,
@@ -204,6 +268,8 @@ def _expected_position_episode(seed: int, horizon: int, rewards: list[float]) ->
     return {
         "seed": seed,
         "horizon": horizon,
+        "rollout_count": None,
+        "temperature": None,
         "total_reward": sum(rewards),
         "steps": steps,
         "terminated": True,
