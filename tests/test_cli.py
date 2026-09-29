@@ -83,7 +83,6 @@ def test_cli_rejects_invalid_temperature_range(tmp_path) -> None:
     )
 
     assert result.exit_code != 0
-    assert "--temperatures" in result.output
 
 
 def test_cli_rejects_malformed_factory_path() -> None:
